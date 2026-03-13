@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Check-in — Grand Palace Hotel</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#C9A84C;--gold-light:#E8CC7A;--gold-dim:rgba(201,168,76,0.15);
+  --dark:#0C0C0C;--surface:#141414;--card:#191919;--card2:#1f1f1f;
+  --border:rgba(201,168,76,0.18);--border2:rgba(255,255,255,0.06);
+  --text:#F0EDE8;--muted:#777;--muted2:#555;
+  --red:#e05555;--green:#4CAF50;
+}
+html{scroll-behavior:smooth}
+body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 90% 60% at 50% -10%,rgba(201,168,76,0.07) 0%,transparent 55%);pointer-events:none;z-index:0}
+
+.container{position:relative;z-index:1;max-width:580px;margin:0 auto;padding:0 18px 80px}
+
+/* HEADER */
+.header{text-align:center;padding:52px 0 36px;animation:fadeDown .7s ease both}
+.emblem{width:58px;height:58px;border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;position:relative}
+.emblem::after{content:'';position:absolute;inset:5px;border-radius:50%;border:1px solid rgba(201,168,76,0.25)}
+.emblem svg{width:24px;height:24px;fill:none;stroke:var(--gold);stroke-width:1.5}
+.hotel-tag{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.headline{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:300;line-height:1.2}
+.headline em{font-style:italic;color:var(--gold-light)}
+.subline{margin-top:10px;font-size:13px;color:var(--muted);line-height:1.6}
+
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:10px;margin:28px 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.diamond{width:5px;height:5px;background:var(--gold);transform:rotate(45deg);flex-shrink:0}
+
+/* RESERVATION STRIP */
+.res-strip{background:var(--card);border:1px solid var(--border);border-radius:2px;padding:20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;position:relative;overflow:hidden;animation:fadeUp .7s .1s ease both}
+.res-strip::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.ri label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:3px}
+.ri .v{font-family:'Cormorant Garamond',serif;font-size:16px}
+.ri .v small{font-size:11px;color:var(--muted);font-family:'DM Sans',sans-serif;margin-left:2px}
+
+/* SECTION */
+.sec-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* FIELDS */
+.field{margin-bottom:14px}
+.field>label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.field input,.field select,.field textarea{width:100%;background:var(--card);border:1px solid var(--border2);border-radius:2px;padding:11px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:300;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
+.field input::placeholder,.field textarea::placeholder{color:var(--muted2)}
+.field select option{background:#1a1a1a}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* ID TYPE SELECTOR */
+.id-type-group{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.id-opt input{position:absolute;opacity:0;width:0;height:0}
+.id-opt{position:relative}
+.id-opt label{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--card);border:1px solid var(--border2);border-radius:2px;cursor:pointer;transition:all .2s;font-size:13px;color:var(--muted)}
+.id-opt label .id-icon{font-size:18px}
+.id-opt input:checked+label{border-color:var(--gold);background:var(--gold-dim);color:var(--gold-light)}
+
+/* SIGNATURE */
+.sig-wrap{position:relative;margin-bottom:14px}
+.sig-canvas-small{width:100%;height:90px;background:var(--card);border:1px solid var(--border2);border-radius:2px;cursor:crosshair;display:block;touch-action:none}
+.sig-canvas-small:focus{outline:none;border-color:var(--gold)}
+.sig-hint{font-size:11px;color:var(--muted2);margin-top:6px;text-align:center}
+.sig-clear{position:absolute;top:8px;right:8px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:10px;letter-spacing:1px;padding:3px 8px;cursor:pointer;border-radius:2px;font-family:'DM Sans',sans-serif}
+.sig-clear:hover{border-color:var(--gold);color:var(--gold)}
+
+/* SIGNATURE MODAL */
+.sig-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.sig-modal.open{display:flex}
+.sig-box{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:24px;width:100%;max-width:500px}
+.sig-box h3{font-family:'Cormorant Garamond',serif;font-size:22px;margin-bottom:16px;font-weight:300}
+.sig-canvas-large{width:100%;height:200px;background:#fff;border-radius:2px;cursor:crosshair;display:block;touch-action:none}
+.sig-modal-actions{display:flex;gap:10px;margin-top:14px;justify-content:flex-end}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;cursor:pointer;border-radius:2px;transition:all .2s}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn-gold{background:var(--gold);border:1px solid var(--gold);color:#0c0c0c;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:10px 18px;cursor:pointer;border-radius:2px;font-weight:500;transition:all .2s}
+.btn-gold:hover{background:var(--gold-light)}
+
+/* ADDITIONAL GUESTS */
+.guests-section{margin-top:8px;animation:fadeUp .5s ease both}
+.guest-card{background:var(--card2);border:1px solid var(--border2);border-radius:2px;padding:18px;margin-bottom:12px;position:relative;animation:fadeUp .3s ease both}
+.guest-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.guest-num{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold)}
+.guest-remove{background:transparent;border:1px solid var(--border2);color:var(--muted);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.guest-remove:hover{border-color:var(--red);color:var(--red)}
+.same-address{display:flex;align-items:center;gap:8px;margin-bottom:12px;cursor:pointer}
+.same-address input[type=checkbox]{width:14px;height:14px;accent-color:var(--gold);cursor:pointer}
+.same-address span{font-size:12px;color:var(--muted)}
+
+.add-guest-btn{width:100%;padding:14px;background:transparent;border:1px dashed rgba(201,168,76,0.3);color:var(--gold);font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+.add-guest-btn:hover{border-color:var(--gold);background:var(--gold-dim)}
+
+/* SUBMIT */
+.submit-btn{width:100%;padding:16px;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;border-radius:2px;margin-top:8px;position:relative;overflow:hidden;transition:color .3s}
+.submit-btn::before{content:'';position:absolute;inset:0;background:var(--gold);transform:translateX(-100%);transition:transform .3s ease}
+.submit-btn:hover::before{transform:translateX(0)}
+.submit-btn:hover{color:var(--dark)}
+.submit-btn span{position:relative;z-index:1}
+
+/* SUCCESS */
+.success-screen{display:none;text-align:center;padding:60px 20px;animation:fadeUp .6s ease both}
+.success-screen.visible{display:block}
+.form-wrap.hidden{display:none}
+.success-icon{width:70px;height:70px;border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 22px}
+.success-icon svg{width:30px;height:30px;stroke:var(--gold);fill:none;stroke-width:1.5}
+.success-title{font-family:'Cormorant Garamond',serif;font-size:28px;margin-bottom:10px}
+.success-text{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* FOOTER */
+.footer{text-align:center;padding-top:40px;font-size:10px;color:rgba(136,136,136,0.35);letter-spacing:1.5px;text-transform:uppercase}
+.footer a{color:var(--gold);text-decoration:none;opacity:.6}
+
+.consent-block{margin-bottom:16px}
+.consent-block .consent-title{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.consent-block .consent-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.consent-label{display:flex;align-items:flex-start;gap:14px;cursor:pointer;padding:18px;background:var(--card);border:1px solid rgba(201,168,76,0.35);border-radius:2px;transition:all .2s;position:relative}
+.consent-label:hover{border-color:var(--gold);background:rgba(201,168,76,0.05)}
+.consent-label input{position:absolute;opacity:0;width:0;height:0}
+.consent-checkbox{width:22px;height:22px;border:2px solid var(--gold);border-radius:3px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s;background:transparent}
+.consent-checkbox .check{display:none;color:#0c0c0c;font-size:13px;font-weight:700}
+.consent-label input:checked ~ .consent-checkbox{background:var(--gold)}
+.consent-label input:checked ~ .consent-checkbox .check{display:block}
+.consent-label input:checked ~ .consent-text{color:var(--text)}
+.consent-text{font-size:13px;color:var(--text);line-height:1.75}
+.consent-text a{color:var(--gold);text-decoration:underline;text-underline-offset:3px;font-weight:500}
+.consent-text a:hover{color:var(--gold-light)}
+/* DEMO BADGE */
+.demo-badge{position:fixed;top:12px;right:12px;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.25);color:var(--gold);font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:20px;z-index:100}
+
+/* PROGRESS */
+.progress{position:fixed;top:0;left:0;height:2px;background:var(--gold);width:0%;transition:width .2s;z-index:200}
+
+@keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<div class="progress" id="prog"></div>
+<div class="demo-badge">Demo</div>
+
+<!-- SIGNATURE MODAL -->
+<div class="sig-modal" id="sigModal">
+  <div class="sig-box">
+    <h3>Signature</h3>
+    <canvas class="sig-canvas-large" id="sigLarge" width="460" height="200"></canvas>
+    <div class="sig-modal-actions">
+      <button class="btn-ghost" onclick="clearLargeSig()">Clear</button>
+      <button class="btn-ghost" onclick="closeSigModal()">Cancel</button>
+      <button class="btn-gold" onclick="saveSig()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="header">
+    <div class="emblem">
+      <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
+    </div>
+    <div class="hotel-tag">Grand Palace Hotel</div>
+    <h1 class="headline">Digital Registration Form,<br><em>Herr Müller</em></h1>
+    <p class="subline">Please complete the form and sign below<br>for a smooth and fast check-in.</p>
+  </div>
+
+  <div class="divider"><div class="diamond"></div></div>
+
+  <!-- RESERVATION -->
+  <div class="res-strip">
+    <div class="ri"><label>Arrival</label><div class="v">Mar 14<small>2026</small></div></div>
+    <div class="ri"><label>Departure</label><div class="v">Mar 17<small>2026</small></div></div>
+    <div class="ri"><label>Room</label><div class="v">Deluxe<small>201</small></div></div>
+    <div class="ri"><label>Guests</label><div class="v">2<small>guests</small></div></div>
+  </div>
+
+  <div class="divider" style="margin:24px 0"><div class="diamond"></div></div>
+
+  <div class="form-wrap" id="formWrap">
+
+    <!-- HAUPTGAST -->
+    <div class="sec-label">Main Guest</div>
+
+    <div class="row2">
+      <div class="field"><label>First Name</label><input type="text" placeholder="First Name"></div>
+      <div class="field"><label>Last Name</label><input type="text" placeholder="Last Name"></div>
+    </div>
+
+    <div class="row2">
+      <div class="field"><label>Date of Birth</label><input type="date" ></div>
+      <div class="field"><label>Nationality</label>
+        <select>
+          <option>German</option><option>Austrian</option><option>Swiss</option>
+          <option>French</option><option>British</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sec-label">Identity Document</div>
+
+    <div class="id-type-group" id="mainIdType">
+      <div class="id-opt">
+        <input type="radio" name="main_id" id="mid1" value="personalausweis" checked>
+        <label for="mid1"><span class="id-icon">🪪</span>ID Card</label>
+      </div>
+      <div class="id-opt">
+        <input type="radio" name="main_id" id="mid2" value="reisepass">
+        <label for="mid2"><span class="id-icon">📘</span>Passport</label>
+      </div>
+    </div>
+
+    <div class="field"><label>ID Number</label><input type="text" placeholder="e.g. L01X00T47" style="letter-spacing:2px"></div>
+
+    <div class="sec-label">Address</div>
+
+    <div class="field"><label>Street & House Number</label><input type="text" placeholder="Street, No."></div>
+    <div class="row3">
+      <div class="field"><label>ZIP</label><input type="text" placeholder="ZIP"></div>
+      <div class="field" style="grid-column:span 2"><label>City</label><input type="text" placeholder="City"></div>
+    </div>
+    <div class="field"><label>Country</label>
+      <select>
+        <option selected>Germany</option><option>Austria</option><option>Switzerland</option>
+        <option>France</option><option>United Kingdom</option><option>Other</option>
+      </select>
+    </div>
+
+    <div class="field"><label>E-Mail</label><input type="email" placeholder="email@domain.com"></div>
+
+    <div class="sec-label">Signature</div>
+    <div class="sig-wrap">
+      <canvas class="sig-canvas-small" id="sigSmall" width="544" height="90" title="Preview"></canvas>
+      <button class="sig-clear" onclick="clearSmallSig(event)">✕ Clear</button>
+    </div>
+    <button type="button" id="openSigBtn" style="width:100%;margin-top:8px;padding:12px;background:rgba(201,168,76,0.12);border:1px solid #C9A84C;color:#C9A84C;font-family:DM Sans,sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:2px;">✍️ Open Signature</button>
+    <p class="sig-hint">Tap the button to add your signature</p>
+
+    <!-- WEITERE GÄSTE -->
+    <div class="divider" style="margin:24px 0"><div class="diamond"></div></div>
+    <div class="sec-label">Additional Guests</div>
+
+    <div id="guestList"></div>
+
+    <button class="add-guest-btn" onclick="addGuest()">
+      <span>＋</span> Add another guest
+    </button>
+
+    <div class="divider" style="margin:24px 0"><div class="diamond"></div></div>
+
+    <!-- DATENSCHUTZ -->
+    <div style="margin-bottom:14px">
+      <div class="sec-label">Privacy &amp; Consent</div>
+      <label style="display:flex;align-items:flex-start;gap:14px;cursor:pointer;padding:16px;background:var(--card);border:1px solid rgba(201,168,76,0.35);border-radius:2px;transition:all .2s" id="consentLabel" onclick="document.getElementById('consentCheck').checked=!document.getElementById('consentCheck').checked;toggleConsent()">
+        <span id="consentBox" style="width:22px;height:22px;border:2px solid var(--gold);border-radius:3px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;background:transparent;transition:all .2s;font-size:13px;color:#0c0c0c;font-weight:700"></span>
+        <input type="checkbox" id="consentCheck" onchange="toggleConsent()" style="position:absolute;opacity:0;width:0;height:0">
+        <span style="font-size:12px;color:var(--muted);line-height:1.7">
+          I have read the <a href="#" onclick="openPrivacy(event)">Privacy Policy</a> and agree that my personal data will be stored to fulfil the legal registration requirement. Data will be automatically deleted one year after departure.
+        </span>
+      </label>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitForm()" disabled style="opacity:.4;cursor:not-allowed">
+      <span>Complete Check-in &amp; Submit Registration</span>
+    </button>
+  </div>
+
+  <!-- PRIVACY MODAL -->
+  <div class="sig-modal" id="privacyModal">
+    <div class="sig-box" style="max-width:560px;max-height:80vh;overflow-y:auto">
+      <h3 style="margin-bottom:20px;font-family:'Cormorant Garamond',serif;font-weight:300">Privacy Policy</h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.9">
+        <p style="margin-bottom:14px"><strong style="color:var(--text);font-weight:500">Data Controller</strong><br>
+        Grand Palace Hotel GmbH &mdash; Musterstra&szlig;e 1, 80333 M&uuml;nchen<br>
+        <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2b4f4a5f4e455848435e5f516b4c594a454f5b4a474a484e054f4e">[email&#160;protected]</a></p>
+        <p style="margin-bottom:14px"><strong style="color:var(--text);font-weight:500">Zweck</strong><br>
+        Your personal data is collected solely to fulfil the statutory registration obligation under the German Federal Registration Act (BMG).</p>
+        <p style="margin-bottom:14px"><strong style="color:var(--text);font-weight:500">Legal Basis</strong><br>
+        Art. 6 Abs. 1 lit. c DSGVO in Verbindung mit &sect; 30 Bundesmeldegesetz.</p>
+        <p style="margin-bottom:14px"><strong style="color:var(--text);font-weight:500">Retention Period</strong><br>
+        Gem&auml;&szlig; &sect; 30 Abs. 4 BMG werden Ihre Daten <strong style="color:var(--gold)">1 Jahr</strong> nach dem Departuretag aufbewahrt und dann automatisch gel&ouml;scht.</p>
+        <p style="margin-bottom:14px"><strong style="color:var(--text);font-weight:500">Data Sharing</strong><br>
+        Data will only be shared with registration authorities as required by § 30 BMG.</p>
+        <p style="margin-bottom:14px"><strong style="color:var(--text);font-weight:500">Your Rights</strong><br>
+        Access, rectification, deletion, restriction and objection — please contact the email address above.</p>
+        <p style="font-size:11px;color:var(--muted2);margin-top:18px;padding-top:14px;border-top:1px solid var(--border2)">
+        This is an AIsellence demo template — customised individually per hotel.</p>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:20px">
+        <button class="btn-gold" onclick="document.getElementById('privacyModal').classList.remove('open')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2 class="success-title">Check-in complete,<br><em style="color:var(--gold-light)">Herr Müller</em></h2>
+    <p class="success-text">Your registration form has been digitally recorded and saved.<br>Welcome to the Grand Palace Hotel.</p>
+  </div>
+
+  <div class="footer">Powered by <a href="#">AIsellence</a> &nbsp;·&nbsp; Digital Hotel Assistant</div>
+</div>
+
+<script>
+// PROGRESS
+window.addEventListener('scroll',()=>{
+  const el=document.documentElement;
+  document.getElementById('prog').style.width=(el.scrollTop/(el.scrollHeight-el.clientHeight)*100)+'%';
+});
+
+// SIGNATURE — robust
+let _sigData = null;
+window._sigData = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+  const sigSmall = document.getElementById('sigSmall');
+  if (sigSmall) {
+    const ctx = sigSmall.getContext('2d');
+    ctx.fillStyle = 'rgba(136,136,136,0.3)';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Preview', sigSmall.width/2, sigSmall.height/2+5);
+  }
+  const openBtn = document.getElementById('openSigBtn');
+  if (openBtn) openBtn.addEventListener('click', openSigModal);
+  const clearBtn = document.getElementById('clearSigBtn');
+  const cancelBtn = document.getElementById('cancelSigBtn');
+  const saveBtn = document.getElementById('saveSigBtn');
+  if (clearBtn) clearBtn.addEventListener('click', clearLargeSig);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeSigModal);
+  if (saveBtn) saveBtn.addEventListener('click', saveSig);
+  const sigLarge = document.getElementById('sigLarge');
+  if (sigLarge) {
+    const ctx = sigLarge.getContext('2d');
+    let drawing = false;
+    function getPos(e) {
+      const rect = sigLarge.getBoundingClientRect();
+      const scaleX = sigLarge.width/rect.width, scaleY = sigLarge.height/rect.height;
+      const src = e.touches?e.touches[0]:e;
+      return {x:(src.clientX-rect.left)*scaleX, y:(src.clientY-rect.top)*scaleY};
+    }
+    sigLarge.addEventListener('mousedown',e=>{drawing=true;const p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);});
+    sigLarge.addEventListener('mousemove',e=>{if(!drawing)return;const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();});
+    sigLarge.addEventListener('mouseup',()=>drawing=false);
+    sigLarge.addEventListener('mouseleave',()=>drawing=false);
+    sigLarge.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);},{passive:false});
+    sigLarge.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();},{passive:false});
+    sigLarge.addEventListener('touchend',()=>drawing=false);
+  }
+});
+
+function openSigModal() {
+  const modal=document.getElementById('sigModal');
+  const sigLarge=document.getElementById('sigLarge');
+  if(!modal||!sigLarge) return;
+  const ctx=sigLarge.getContext('2d');
+  modal.classList.add('open');
+  ctx.clearRect(0,0,sigLarge.width,sigLarge.height);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,sigLarge.width,sigLarge.height);
+  ctx.strokeStyle='#1a1a1a'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.lineJoin='round';
+  if(window._sigData){const img=new Image();img.onload=()=>ctx.drawImage(img,0,0,sigLarge.width,sigLarge.height);img.src=window._sigData;}
+}
+function closeSigModal(){const m=document.getElementById('sigModal');if(m)m.classList.remove('open');}
+function clearLargeSig(){const c=document.getElementById('sigLarge');if(!c)return;const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);}
+function saveSig(){
+  const sigLarge=document.getElementById('sigLarge');
+  const sigSmall=document.getElementById('sigSmall');
+  if(!sigLarge||!sigSmall)return;
+  window._sigData=sigLarge.toDataURL();
+  const ctx=sigSmall.getContext('2d');
+  ctx.clearRect(0,0,sigSmall.width,sigSmall.height);
+  const img=new Image();
+  img.onload=()=>ctx.drawImage(img,0,0,sigSmall.width,sigSmall.height);
+  img.src=window._sigData;
+  closeSigModal();
+}
+function clearSmallSig(e){
+  if(e)e.stopPropagation();
+  window._sigData=null;
+  const c=document.getElementById('sigSmall');if(!c)return;
+  const ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.fillStyle='rgba(136,136,136,0.3)';ctx.font='13px sans-serif';ctx.textAlign='center';
+  ctx.fillText('Preview',c.width/2,c.height/2+5);
+}
+
+// ADDITIONAL GUESTS
+let guestCount = 0;
+const mainAddr = () => ({
+  street: document.querySelectorAll('.field input')[4]?.value || '',
+  plz: document.querySelectorAll('.field input')[5]?.value || '',
+  city: document.querySelectorAll('.field input')[6]?.value || '',
+});
+
+function addGuest() {
+  guestCount++;
+  const n = guestCount;
+  const div = document.createElement('div');
+  div.className = 'guest-card';
+  div.id = `guest-${n}`;
+  div.innerHTML = `
+    <div class="guest-card-header">
+      <span class="guest-num">Guest ${n + 1}</span>
+      <button class="guest-remove" onclick="removeGuest(${n})">✕</button>
+    </div>
+
+    <div class="row2">
+      <div class="field"><label>First Name</label><input type="text" placeholder="First Name"></div>
+      <div class="field"><label>Last Name</label><input type="text" placeholder="Last Name"></div>
+    </div>
+
+    <div class="row2">
+      <div class="field"><label>Date of Birth</label><input type="date"></div>
+      <div class="field"><label>Nationality</label>
+        <select>
+          <option value="">Please select…</option>
+          <option>German</option><option>Austrian</option><option>Swiss</option>
+          <option>French</option><option>British</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sec-label" style="margin-top:4px">Identity Document</div>
+    <div class="id-type-group">
+      <div class="id-opt">
+        <input type="radio" name="gid_${n}" id="gid${n}_1" value="personalausweis" checked>
+        <label for="gid${n}_1"><span class="id-icon">🪪</span>ID Card</label>
+      </div>
+      <div class="id-opt">
+        <input type="radio" name="gid_${n}" id="gid${n}_2" value="reisepass">
+        <label for="gid${n}_2"><span class="id-icon">📘</span>Passport</label>
+      </div>
+    </div>
+    <div class="field"><label>ID Number</label><input type="text" placeholder="ID Number" style="letter-spacing:2px"></div>
+
+    <div class="sec-label">Address</div>
+    <label class="same-address">
+      <input type="checkbox" onchange="copySameAddr(this,${n})">
+      <span>Same address as main guest</span>
+    </label>
+    <div id="gaddr-${n}">
+      <div class="field"><label>Street & House Number</label><input type="text" placeholder="Street, No." class="g-street"></div>
+      <div class="row3">
+        <div class="field"><label>ZIP</label><input type="text" placeholder="ZIP" class="g-plz"></div>
+        <div class="field" style="grid-column:span 2"><label>City</label><input type="text" placeholder="City" class="g-city"></div>
+      </div>
+      <div class="field"><label>Country</label>
+        <select class="g-land">
+          <option>Deutschland</option><option>Austria</option><option>Switzerland</option>
+          <option>France</option><option>United Kingdom</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+  `;
+  document.getElementById('guestList').appendChild(div);
+}
+
+function removeGuest(n) {
+  const el = document.getElementById(`guest-${n}`);
+  if(el) el.remove();
+  // Re-number displayed labels
+  document.querySelectorAll('.guest-card .guest-num').forEach((el,i)=> el.textContent = `Guest ${i+2}`);
+}
+
+function copySameAddr(cb, n) {
+  const addr = mainAddr();
+  const block = document.getElementById(`gaddr-${n}`);
+  if(cb.checked) {
+    block.querySelector('.g-street').value = addr.street;
+    block.querySelector('.g-plz').value = addr.plz;
+    block.querySelector('.g-city').value = addr.city;
+    block.querySelectorAll('input,select').forEach(el=>el.disabled=true);
+  } else {
+    block.querySelectorAll('input,select').forEach(el=>el.disabled=false);
+  }
+}
+
+// SUBMIT
+async function submitForm() {
+  const btn = document.querySelector('.submit-btn');
+  btn.innerHTML = '<span>Saving…</span>';
+  btn.style.opacity = '.6';
+  btn.disabled = true;
+  const params = new URLSearchParams(window.location.search);
+  const bookingId = params.get('booking') || '';
+  const allInputs = document.querySelectorAll('.field input[type=text], .field input[type=email], .field input[type=date], .field select');
+  const payload = {
+    booking_id: bookingId,
+    guest_name: (allInputs[0]?.value||'') + ' ' + (allInputs[1]?.value||''),
+    birth_date: allInputs[2]?.value||'',
+    nationality: document.querySelectorAll('.field select')[0]?.value||'',
+    id_type: document.querySelector('input[name=main_id]:checked')?.value||'',
+    id_number: allInputs[3]?.value||'',
+    address: (allInputs[4]?.value||'') + ', ' + (allInputs[5]?.value||'') + ' ' + (allInputs[6]?.value||''),
+    email: allInputs[7]?.value||'',
+    signature_url: window._sigData||'',
+    gdpr_consent: document.getElementById('consentCheck')?.checked||false,
+    language: 'en',
+    submitted_at: new Date().toISOString()
+  };
+  try {
+    await fetch('https://hook.eu2.make.com/dci6uqyj9udxno12m65mgy8owxcl3bs7', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+    document.getElementById('formWrap').classList.add('hidden');
+    document.getElementById('successScreen').classList.add('visible');
+    window.scrollTo({top:0,behavior:'smooth'});
+  } catch(err) {
+    btn.innerHTML = '<span>Error – please try again</span>';
+    btn.style.opacity = '1';
+    btn.disabled = false;
+  }
+}
+
+function toggleConsent() {
+  const btn = document.getElementById('submitBtn');
+  const checked = document.getElementById('consentCheck').checked;
+  btn.disabled = !checked;
+  btn.style.opacity = checked ? '1' : '.4';
+  btn.style.cursor = checked ? 'pointer' : 'not-allowed';
+  const box = document.getElementById('consentBox');
+  box.style.background = checked ? 'var(--gold)' : 'transparent';
+  box.textContent = checked ? '✓' : '';
+  document.getElementById('consentLabel').style.borderColor = checked ? 'var(--gold)' : 'rgba(201,168,76,0.35)';
+  document.getElementById('privacyModal') && document.getElementById('privacyModal').classList.remove('open');
+}
+
+function openPrivacy(e) {
+  e.preventDefault();
+  const m = document.getElementById('privacyModal');
+  if (m) m.classList.add('open');
+}
+</script>
+</body>
+</html>
